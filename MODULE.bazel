@@ -1,0 +1,8 @@
+module(
+    name = "finances",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "rules_kotlin", version = "1.9.0")
+bazel_dep(name = "rules_jvm", version = "1.0.0")
+bazel_dep(name = "rules_android", version = "0.1.0")
