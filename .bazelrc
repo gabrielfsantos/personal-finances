@@ -19,4 +19,27 @@ build --cxxopt=-Werror
 
 build --copt=-std=c++20
 
+# AddressSanitizer
+build:asan --copt=-fsanitize=address
+build:asan --cxxopt=-fsanitize=address
+build:asan --linkopt=-fsanitize=address
+build:asan --strip=never
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --cxxopt=-fno-omit-frame-pointer
+
+# UndefinedBehaviorSanitizer
+build:ubsan --copt=-fsanitize=undefined
+build:ubsan --cxxopt=-fsanitize=undefined
+build:ubsan --linkopt=-fsanitize=undefined
+build:ubsan --strip=never
+
+build:asan_ubsan --config=asan
+build:asan_ubsan --config=ubsan
+
+# ThreadSanitizer
+build:tsan --copt=-fsanitize=thread
+build:tsan --cxxopt=-fsanitize=thread
+build:tsan --linkopt=-fsanitize=thread
+build:tsan --strip=never
+
 test --test_output=errors
