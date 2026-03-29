@@ -42,4 +42,26 @@ build:tsan --cxxopt=-fsanitize=thread
 build:tsan --linkopt=-fsanitize=thread
 build:tsan --strip=never
 
+# Debug build
+build:debug --compilation_mode=dbg
+build:debug --copt=-O0
+build:debug --cxxopt=-O0
+build:debug --strip=never
+
+# Release build
+build:release --compilation_mode=opt
+build:release --copt=-O3
+build:release --cxxopt=-O3
+build:release --linkopt=-O3
+build:release --strip=always
+
+# Sanitized build (ASan + UBSan)
+build:sanitized --config=debug
+build:sanitized --copt=-fsanitize=address,undefined
+build:sanitized --cxxopt=-fsanitize=address,undefined
+build:sanitized --linkopt=-fsanitize=address,undefined
+build:sanitized --strip=never
+build:sanitized --copt=-fno-omit-frame-pointer
+build:sanitized --cxxopt=-fno-omit-frame-pointer
+
 test --test_output=errors
