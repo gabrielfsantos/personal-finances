@@ -1,3 +1,5 @@
-build --enable_bzlmod
-build --experimental_enable_android_migration_apis
-build --sandbox_debug
+common --enable_bzlmod
+test --test_output=errors
+
+build --cxxopt=-std=c++20
+build --copt=-std=c++20
