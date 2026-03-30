@@ -42,6 +42,13 @@ build:tsan --cxxopt=-fsanitize=thread
 build:tsan --linkopt=-fsanitize=thread
 build:tsan --strip=never
 
+# Clang-Tidy build
+build:tidy --features=clang-tidy
+build:tidy --config=debug
+build:tidy --copt=-fno-omit-frame-pointer
+build:tidy --cxxopt=-fno-omit-frame-pointer
+build:tidy --action_env=CLANG_TIDY=external/toolchains_llvm~~llvm~llvm_toolchain/bin/clang-tidy
+
 # Debug build
 build:debug --compilation_mode=dbg
 build:debug --copt=-O0
