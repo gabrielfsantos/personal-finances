@@ -2,10 +2,10 @@
 #include "core/src/currency.h"
 
 class Money {
- public:
-  long amount;
-  Currency currency;
+   public:
+    long amount;
+    Currency currency;
 
-  Money(long amount, Currency currency);
-  bool operator==(const Money &other) const;
+    Money(long amount, Currency currency);
+    bool operator==(const Money &other) const;
 };
