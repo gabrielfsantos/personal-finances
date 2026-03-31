@@ -1,17 +1,13 @@
-#include "core/src/transaction.h"
 #include <cassert>
 
-int main()
-{
-    Transaction t(
-        TransactionType::Income,
-        Money(100, Currency::EUR),
-        "food",
-        12345,
-        "Lunch");
+#include "core/src/transaction.h"
 
-    assert(t.id.size() == 32);
-    assert(t.amount.amount == 100);
+int main() {
+  Transaction t(TransactionType::Income, Money(100, Currency::EUR), "food",
+                12345, "Lunch");
 
-    return 0;
+  assert(t.id.size() == 32);
+  assert(t.amount.amount == 100);
+
+  return 0;
 }

@@ -1,22 +1,19 @@
-#include "core/src/money.h"
 #include <cassert>
 
-int main()
-{
-    Money a(100, Currency::EUR);
-    Money b(100, Currency::EUR);
-    assert(a == b);
+#include "core/src/money.h"
 
-    bool threw = false;
-    try
-    {
-        Money(-10, Currency::EUR);
-    }
-    catch (...)
-    {
-        threw = true;
-    }
-    assert(threw);
+int main() {
+  Money a(100, Currency::EUR);
+  Money b(100, Currency::EUR);
+  assert(a == b);
 
-    return 0;
+  bool threw = false;
+  try {
+    Money(-10, Currency::EUR);
+  } catch (...) {
+    threw = true;
+  }
+  assert(threw);
+
+  return 0;
 }
