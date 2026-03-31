@@ -1,27 +1,74 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [ master ]
   push:
-    branches: [ master ]
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  build:
+  format-check:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
 
       - name: Install Bazelisk
-        run: |
-          curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o bazelisk
-          chmod +x bazelisk
-          sudo mv bazelisk /usr/local/bin/bazel
+        uses: bazelbuild/setup-bazelisk@v3
 
-      - name: Bazel version
-        run: bazel version
+      - name: Format check
+        run: bazel run //tools/format:format.check
 
-      - name: Validate Bazel workspace
-        run: bazel query //...
+  lint-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Lint / Tidy
+        run: bazel build //... --config=tidy
+
+  build-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, release, sanitized, tsan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-cache-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Build
+        run: bazel build //... --config=${{ matrix.config }}
+
+      - name: Test
+        run: bazel test //... --config=${{ matrix.config }}
