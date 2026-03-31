@@ -1,0 +1,13 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "money_tests",
+    srcs = ["money_tests.cpp"],
+    deps = ["//core/src:core"],
+)
+
+cc_test(
+    name = "transaction_tests",
+    srcs = ["transaction_tests.cpp"],
+    deps = ["//core/src:core"],
+)

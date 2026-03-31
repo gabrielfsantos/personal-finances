@@ -1,0 +1,14 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files(
+    [
+        ".clang-format",
+        ".clang-tidy",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "format",
+    actual = "//tools/format",
+)

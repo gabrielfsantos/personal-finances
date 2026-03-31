@@ -1,0 +1,16 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "core",
+    srcs = [
+        "currency.cpp",
+        "money.cpp",
+        "transaction.cpp",
+    ],
+    hdrs = [
+        "currency.h",
+        "money.h",
+        "transaction.h",
+    ],
+    visibility = ["//visibility:public"],
+)
