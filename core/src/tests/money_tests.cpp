@@ -1,19 +1,16 @@
-#include <cassert>
+#include <gtest/gtest.h>
 
 #include "core/src/money.h"
 
-int main() {
+namespace {
+using namespace Finances::Core;
+
+TEST(MoneyTest, EqualityWorks) {
     Money a(100, Currency::EUR);
     Money b(100, Currency::EUR);
-    assert(a == b);
-
-    bool threw = false;
-    try {
-        Money(-10, Currency::EUR);
-    } catch (...) {
-        threw = true;
-    }
-    assert(threw);
-
-    return 0;
+    EXPECT_EQ(a, b);
 }
+
+TEST(MoneyTest, ThrowsOnNegativeAmount) { EXPECT_THROW(Money(-10, Currency::EUR), std::invalid_argument); }
+
+}  // namespace

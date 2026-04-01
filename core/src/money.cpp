@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+namespace Finances {
+namespace Core {
+
 Money::Money(long amount, Currency currency) : amount(amount), currency(currency) {
     if (amount < 0) {
         throw std::invalid_argument("Amount cannot be negative");
@@ -9,3 +12,6 @@ Money::Money(long amount, Currency currency) : amount(amount), currency(currency
 }
 
 bool Money::operator==(const Money &other) const { return amount == other.amount && currency == other.currency; }
+
+}  // namespace Core
+}  // namespace Finances

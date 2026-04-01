@@ -1,0 +1,56 @@
+name: Gate
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, release, sanitized, tsan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Build
+        run: bazel build //... --config=${{ matrix.config }}
+
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [debug, release, asan, tsan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Test
+        run: bazel test //... --config=${{ matrix.config }}

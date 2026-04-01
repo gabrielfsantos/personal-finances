@@ -2,6 +2,9 @@
 
 #include <random>
 
+namespace Finances {
+namespace Core {
+
 static std::string generate_id() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -25,3 +28,6 @@ Transaction::Transaction(TransactionType type, Money amount, std::string categor
       category_id(category_id),
       timestamp(timestamp),
       description(description) {}
+
+}  // namespace Core
+}  // namespace Finances
