@@ -2,6 +2,9 @@
 
 #include "core/src/transaction.h"
 
+namespace {
+using namespace Finances::Core;
+
 TEST(TransactionTest, CreatesValidTransaction) {
     Transaction t(TransactionType::Income, Money(100, Currency::EUR), "food", 12345, "Lunch");
 
@@ -16,3 +19,5 @@ TEST(TransactionTest, Generates32CharId) {
 
     EXPECT_EQ(t.id.size(), 32);
 }
+
+}  // namespace

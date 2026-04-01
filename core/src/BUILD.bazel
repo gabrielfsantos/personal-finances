@@ -3,7 +3,6 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 cc_library(
     name = "core",
     srcs = [
-        "currency.cpp",
         "money.cpp",
         "transaction.cpp",
     ],
@@ -12,5 +11,5 @@ cc_library(
         "money.h",
         "transaction.h",
     ],
-    visibility = ["//visibility:public"],
+    visibility = ["//core/src/tests:__subpackages__"],
 )

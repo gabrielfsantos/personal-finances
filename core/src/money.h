@@ -1,6 +1,8 @@
 #pragma once
 #include "core/src/currency.h"
 
+namespace Finances {
+namespace Core {
 class Money {
    public:
     long amount;
@@ -9,3 +11,6 @@ class Money {
     Money(long amount, Currency currency);
     bool operator==(const Money &other) const;
 };
+
+}  // namespace Core
+}  // namespace Finances

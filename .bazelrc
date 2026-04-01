@@ -33,8 +33,8 @@ build:ubsan --cxxopt=-fsanitize=undefined
 build:ubsan --linkopt=-fsanitize=undefined
 build:ubsan --strip=never
 
-build:asan_ubsan --config=asan
-build:asan_ubsan --config=ubsan
+build:ubsan --build_tag_filters=-no_sanitize
+test:ubsan --test_tag_filters=-no_sanitize
 
 # ThreadSanitizer
 build:tsan --copt=-fsanitize=thread
@@ -70,5 +70,10 @@ build:sanitized --linkopt=-fsanitize=address,undefined
 build:sanitized --strip=never
 build:sanitized --copt=-fno-omit-frame-pointer
 build:sanitized --cxxopt=-fno-omit-frame-pointer
+build:sanitized --copt=-fno-sanitize-recover=all
+build:sanitized --linkopt=-fno-sanitize-recover=all
+
+build:sanitized --build_tag_filters=-no_sanitize
+test:sanitized --test_tag_filters=-no_sanitize
 
 test --test_output=errors
