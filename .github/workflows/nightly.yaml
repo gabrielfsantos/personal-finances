@@ -1,15 +1,13 @@
-name: Gate
+name: Nightly
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +22,7 @@ jobs:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          key: bazel-nightly-build-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
@@ -49,7 +47,7 @@ jobs:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          key: bazel-nightly-test-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@v3
