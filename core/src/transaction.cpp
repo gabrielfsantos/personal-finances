@@ -2,15 +2,13 @@
 
 #include <random>
 
-namespace Finances {
-namespace Core {
+namespace Finances::Core {
 
 static std::string generate_id() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 15);
+    thread_local std::mt19937 gen(std::random_device{}());
+    std::uniform_int_distribution dis(0, 15);
 
-    const char *hex = "0123456789abcdef";
+    const char* hex = "0123456789abcdef";
     std::string uuid(32, '0');
 
     for (std::size_t i = 0; i < 32; i++) {
@@ -20,7 +18,7 @@ static std::string generate_id() {
     return uuid;
 }
 
-Transaction::Transaction(TransactionType type, Money amount, std::string category_id, long timestamp,
+Transaction::Transaction(TransactionType type, Money amount, const std::string& category_id, long timestamp,
                          std::optional<std::string> description)
     : id(generate_id()),
       type(type),
@@ -29,5 +27,4 @@ Transaction::Transaction(TransactionType type, Money amount, std::string categor
       timestamp(timestamp),
       description(description) {}
 
-}  // namespace Core
-}  // namespace Finances
+}  // namespace Finances::Core

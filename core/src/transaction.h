@@ -4,8 +4,7 @@
 
 #include "core/src/money.h"
 
-namespace Finances {
-namespace Core {
+namespace Finances::Core {
 
 enum class TransactionType { Income, Expense };
 
@@ -18,9 +17,8 @@ class Transaction {
     long timestamp;
     std::optional<std::string> description;
 
-    Transaction(TransactionType type, Money amount, std::string category_id, long timestamp,
+    Transaction(TransactionType type, Money amount, const std::string& category_id, long timestamp,
                 std::optional<std::string> description);
 };
 
-}  // namespace Core
-}  // namespace Finances
+}  // namespace Finances::Core

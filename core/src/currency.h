@@ -1,9 +1,7 @@
 #pragma once
 
-namespace Finances {
-namespace Core {
+namespace Finances::Core {
 
 enum class Currency { EUR, USD, BRL, GBP };
 
-}  // namespace Core
-}  // namespace Finances
+}  // namespace Finances::Core
