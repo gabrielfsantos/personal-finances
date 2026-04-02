@@ -6,7 +6,7 @@ namespace Finances::Core {
 
 static std::string generate_id() {
     thread_local std::mt19937 gen(std::random_device{}());
-    std::uniform_int_distribution<int> dis(0, 15);
+    std::uniform_int_distribution dis(0, 15);
 
     const char* hex = "0123456789abcdef";
     std::string uuid(32, '0');
