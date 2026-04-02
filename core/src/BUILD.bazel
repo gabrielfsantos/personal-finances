@@ -1,15 +1,26 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
-    name = "core",
-    srcs = [
-        "money.cpp",
-        "transaction.cpp",
-    ],
+    name = "currency",
+    srcs = [],
+    hdrs = ["currency.h"],
+    # visibility = ["//core/src/tests:__subpackages__"],
+)
+
+cc_library(
+    name = "money",
+    srcs = ["money.cpp"],
+    hdrs = ["money.h"],
+    visibility = ["//core/src/tests:__subpackages__"],
+    deps = [":currency"],
+)
+
+cc_library(
+    name = "transaction",
+    srcs = ["transaction.cpp"],
     hdrs = [
-        "currency.h",
-        "money.h",
         "transaction.h",
     ],
     visibility = ["//core/src/tests:__subpackages__"],
+    deps = [":money"],
 )
