@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-gate:
     runs-on: ubuntu-latest
 
     strategy:
@@ -36,9 +36,9 @@ jobs:
       - name: Build
         run: bazel build //... --config=${{ matrix.config }}
 
-  test:
+  test-gate:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-gate
     strategy:
       fail-fast: false
       matrix:
