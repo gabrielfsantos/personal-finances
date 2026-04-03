@@ -18,7 +18,7 @@ class Transaction {
     std::optional<std::string> description;
 
     Transaction(TransactionType type, Money amount, const std::string& category_id, long timestamp,
-                std::optional<std::string> description);
+                const std::optional<std::string>& description);
 };
 
 }  // namespace Finances::Core
