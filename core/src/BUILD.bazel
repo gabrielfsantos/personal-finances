@@ -8,19 +8,25 @@ cc_library(
 )
 
 cc_library(
+    name = "money_errors",
+    hdrs = ["money_errors.h"],
+)
+
+cc_library(
     name = "money",
     srcs = ["money.cpp"],
     hdrs = ["money.h"],
     visibility = ["//core/src/tests:__subpackages__"],
-    deps = [":currency"],
+    deps = [
+        ":currency",
+        ":money_errors",
+    ],
 )
 
 cc_library(
     name = "transaction",
     srcs = ["transaction.cpp"],
-    hdrs = [
-        "transaction.h",
-    ],
+    hdrs = ["transaction.h"],
     visibility = ["//core/src/tests:__subpackages__"],
     deps = [":money"],
 )

@@ -3,6 +3,9 @@
 #include <charconv>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
+
+#include "core/src/money_errors.h"
 
 namespace Finances::Core {
 
@@ -19,7 +22,7 @@ std::int64_t pow10(unsigned int n) {
 std::int64_t safe_add(std::int64_t a, std::int64_t b) {
     if ((b > 0 && a > std::numeric_limits<std::int64_t>::max() - b) ||
         (b < 0 && a < std::numeric_limits<std::int64_t>::min() - b)) {
-        throw std::overflow_error("Money addition overflow");
+        throw MoneyOverflowError("addition overflow");
     }
     return a + b;
 }
@@ -31,11 +34,11 @@ Money::Money(Currency currency, std::int64_t minor_units) : minor_units_(minor_u
 Money Money::from_major(Currency currency, std::int64_t major) {
     const auto factor = pow10(currency.decimals());
     if (major > 0 && major > std::numeric_limits<std::int64_t>::max() / factor) {
-        throw std::overflow_error("Money from_major overflow");
+        throw MoneyOverflowError("Money from_major overflow");
     }
 
     if (major < 0 && major < std::numeric_limits<std::int64_t>::min() / factor) {
-        throw std::overflow_error("Money from_major underflow");
+        throw MoneyOverflowError("Money from_major underflow");
     }
     return Money(std::move(currency), major * factor);
 }
@@ -56,29 +59,37 @@ Money Money::from_decimal_string(Currency currency, std::string_view text) {
     std::int64_t integer = 0;
     if (!int_part.empty()) {
         auto res = std::from_chars(int_part.data(), int_part.data() + int_part.size(), integer);
-        if (res.ec != std::errc{}) {
-            throw std::invalid_argument("Invalid integer part in decimal string");
+        if (res.ec != std::errc{} || res.ptr != int_part.data() + int_part.size()) {
+            throw MoneyParseError("Invalid integer part in decimal string");
         }
     }
 
     auto decimals = currency.decimals();
     if (static_cast<unsigned int>(frac_part.size()) > decimals) {
-        throw std::invalid_argument("Too many fractional digits for currency");
+        throw MoneyParseError("Too many fractional digits for currency");
     }
 
     std::int64_t fraction = 0;
     if (!frac_part.empty()) {
         auto res = std::from_chars(frac_part.data(), frac_part.data() + frac_part.size(), fraction);
-        if (res.ec != std::errc{}) {
-            throw std::invalid_argument("Invalid fractional part in decimal string");
+        if (res.ec != std::errc{} || res.ptr != frac_part.data() + frac_part.size()) {
+            throw MoneyParseError("Invalid fractional part in decimal string");
         }
     }
 
     auto factor = pow10(decimals);
     auto frac_factor = pow10(decimals - static_cast<unsigned int>(frac_part.size()));
 
-    // std::int64_t minor = 0;
+    if ((integer > 0 && integer > std::numeric_limits<std::int64_t>::max() / factor) ||
+        (integer < 0 && integer < std::numeric_limits<std::int64_t>::min() / factor)) {
+        throw MoneyParseError("Integer part overflow");
+    }
+
     auto minor = safe_add(integer * factor, fraction * frac_factor);
+    if (negative && minor != 0 && minor == std::numeric_limits<std::int64_t>::min()) {
+        throw MoneyParseError("Cannot negate INT64_MIN");
+    }
+
     if (negative) {
         minor = -minor;
     }
@@ -120,7 +131,7 @@ std::string Money::to_string() const {
 
 Money& Money::operator+=(const Money& other) {
     if (currency_ != other.currency_) {
-        throw std::logic_error("Cannot add Money with different currencies");
+        throw MoneyCurrencyMismatchError("Cannot add Money with different currencies");
     }
     minor_units_ = safe_add(minor_units_, other.minor_units_);
     return *this;
@@ -128,10 +139,17 @@ Money& Money::operator+=(const Money& other) {
 
 Money& Money::operator-=(const Money& other) {
     if (currency_ != other.currency_) {
-        throw std::logic_error("Cannot subtract Money with different currencies");
+        throw MoneyCurrencyMismatchError("Cannot subtract Money with different currencies");
     }
     minor_units_ = safe_add(minor_units_, -other.minor_units_);
     return *this;
+}
+
+std::strong_ordering operator<=>(const Money& lhs, const Money& rhs) {
+    if (lhs.currency_ != rhs.currency_) {
+        throw MoneyCurrencyMismatchError("Cannot compare Money with different currencies");
+    }
+    return lhs.minor_units_ <=> rhs.minor_units_;
 }
 
 }  // namespace Finances::Core

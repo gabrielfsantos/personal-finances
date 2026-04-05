@@ -2,9 +2,12 @@
 
 #include "core/src/currency.h"
 #include "core/src/money.h"
+#include "core/src/money_errors.h"
 
 namespace {
 using namespace Finances::Core;
+
+using minorType = decltype(std::declval<Money>().minor_units());
 
 class MoneyTests : public ::testing::Test {
    protected:
@@ -25,6 +28,14 @@ TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_negative_THEN_MinorUnitsAreCorr
     EXPECT_EQ(m.currency(), eur_);
     EXPECT_EQ(m.minor_units(), -1000);
     EXPECT_EQ(m.to_string(), "EUR -10.00");
+}
+
+TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_overflow_THEN_Throws) {
+    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<minorType>::max()), MoneyOverflowError);
+}
+
+TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_underflow_THEN_Throws) {
+    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<minorType>::min()), MoneyOverflowError);
 }
 
 TEST_F(MoneyTests, GIVEN_DecimalString_WHEN_Parsed_THEN_MinorUnitsMatch) {
@@ -70,19 +81,38 @@ TEST_F(MoneyTests, GIVEN_NegativeDecimal_WHEN_Parsed_THEN_MoneyIsNegative) {
 }
 
 TEST_F(MoneyTests, GIVEN_TooManyFractionDigits_WHEN_Parsed_THEN_Throws) {
-    EXPECT_THROW(Money::from_decimal_string(eur_, "1.234"), std::invalid_argument);
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.234"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_TooManyFractionDigits_WHEN_Parsed_THEN_Throws_1) {
-    EXPECT_THROW(Money::from_decimal_string(eur_, "A.23"), std::invalid_argument);
+TEST_F(MoneyTests, GIVEN_InvalidInteger_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "A.23"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_TooManyFractionDigits_WHEN_Parsed_THEN_Throws_2) {
-    EXPECT_THROW(Money::from_decimal_string(eur_, "1.A"), std::invalid_argument);
+TEST_F(MoneyTests, GIVEN_InvalidFraction_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.A"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_TooManyFractionDigits_WHEN_Parsed_THEN_Throws_3) {
-    EXPECT_THROW(Money::from_decimal_string(eur_, "A"), std::invalid_argument);
+TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "A"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws_1) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1A"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws_2) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.2A"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_IntegerPartOverflow_WHEN_Parsed_THEN_Throws) {
+    std::string overflow_str = std::to_string(std::numeric_limits<minorType>::max() / 100 + 1) + ".00";
+    EXPECT_THROW(Money::from_decimal_string(eur_, overflow_str), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_IntegerPartUnderflow_WHEN_Parsed_THEN_Throws) {
+    Currency usd("USD", 0);
+    std::string underflow_str = "-" + std::to_string(std::numeric_limits<minorType>::min());
+    EXPECT_THROW(Money::from_decimal_string(usd, underflow_str), MoneyParseError);
 }
 
 TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_Added_THEN_ResultIsCorrect) {
@@ -105,12 +135,34 @@ TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_Subtracted_THEN_ResultIsCorrect) {
     EXPECT_EQ(c.to_string(), "EUR -0.75");
 }
 
+TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_AddedWithOverflow_THEN_Throws) {
+    Money a = Money(eur_, std::numeric_limits<minorType>::max() - 100);
+    Money b = Money(eur_, 225);
+
+    EXPECT_THROW(a + b, MoneyOverflowError);
+}
+
+TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_AddedWithUnderflow_THEN_Throws) {
+    Money a = Money(eur_, std::numeric_limits<minorType>::min() + 100);
+    Money b = Money(eur_, 225);
+
+    EXPECT_THROW(a - b, MoneyOverflowError);
+}
+
 TEST_F(MoneyTests, GIVEN_DifferentCurrencies_WHEN_Added_THEN_Throws) {
     Currency usd("USD", 2);
     Money a = Money::from_major(eur_, 1);
     Money b = Money::from_major(usd, 1);
 
-    EXPECT_THROW(a + b, std::logic_error);
+    EXPECT_THROW(a + b, MoneyCurrencyMismatchError);
+}
+
+TEST_F(MoneyTests, GIVEN_DifferentCurrencies_WHEN_Subtracted_THEN_Throws) {
+    Currency usd("USD", 2);
+    Money a = Money::from_major(eur_, 1);
+    Money b = Money::from_major(usd, 1);
+
+    EXPECT_THROW(a - b, MoneyCurrencyMismatchError);
 }
 
 TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_Compared_THEN_OrderIsCorrect) {
@@ -126,7 +178,7 @@ TEST_F(MoneyTests, GIVEN_DifferentCurrencies_WHEN_Compared_THEN_Throws) {
     Money a = Money::from_major(eur_, 1);
     Money b = Money::from_major(usd, 1);
 
-    EXPECT_THROW((void)(a <=> b), std::logic_error);
+    EXPECT_THROW((void)(a <=> b), MoneyCurrencyMismatchError);
 }
 
 }  // namespace
