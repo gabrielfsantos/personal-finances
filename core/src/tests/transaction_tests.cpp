@@ -6,7 +6,7 @@ namespace {
 using namespace Finances::Core;
 
 TEST(TransactionTest, CreatesValidTransaction) {
-    Transaction t(TransactionType::Income, Money(100, Currency::EUR), "food", 12345, "Lunch");
+    Transaction t(TransactionType::Income, Money(100, Currency("EUR", 2)), "food", 12345, "Lunch");
 
     EXPECT_EQ(t.amount.amount, 100);
     EXPECT_EQ(t.category_id, "food");
@@ -15,7 +15,7 @@ TEST(TransactionTest, CreatesValidTransaction) {
 }
 
 TEST(TransactionTest, Generates32CharId) {
-    Transaction t(TransactionType::Expense, Money(50, Currency::EUR), "transport", 99999, "Bus");
+    Transaction t(TransactionType::Expense, Money(50, Currency("EUR", 2)), "transport", 99999, "Bus");
 
     EXPECT_EQ(t.id.size(), 32);
 }
