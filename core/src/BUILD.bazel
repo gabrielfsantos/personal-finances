@@ -2,9 +2,9 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
     name = "currency",
-    srcs = [],
+    srcs = ["currency.cpp"],
     hdrs = ["currency.h"],
-    # visibility = ["//core/src/tests:__subpackages__"],
+    visibility = ["//core/src/tests:__subpackages__"],
 )
 
 cc_library(

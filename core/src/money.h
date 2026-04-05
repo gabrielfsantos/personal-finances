@@ -1,4 +1,6 @@
 #pragma once
+#include <compare>
+
 #include "core/src/currency.h"
 
 namespace Finances::Core {
@@ -8,7 +10,7 @@ class Money {
     Currency currency;
 
     Money(long amount, Currency currency);
-    bool operator==(const Money &other) const;
+    auto operator<=>(const Money&) const = default;
 };
 
 }  // namespace Finances::Core

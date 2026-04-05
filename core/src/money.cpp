@@ -10,6 +10,4 @@ Money::Money(long amount, Currency currency) : amount(amount), currency(currency
     }
 }
 
-bool Money::operator==(const Money &other) const = default;
-
 }  // namespace Finances::Core
