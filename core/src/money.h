@@ -9,8 +9,9 @@ class Money {
     long amount;
     Currency currency;
 
-    Money(long amount, Currency currency);
-    auto operator<=>(const Money&) const = default;
+    Money(long amount, const Currency& currency);
+
+    bool operator==(const Money&) const = default;
 };
 
 }  // namespace Finances::Core
