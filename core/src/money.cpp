@@ -27,6 +27,14 @@ std::int64_t safe_add(std::int64_t a, std::int64_t b) {
     return a + b;
 }
 
+std::int64_t safe_sub(std::int64_t a, std::int64_t b) {
+    if ((b > 0 && a < std::numeric_limits<std::int64_t>::min() + b) ||
+        (b < 0 && a > std::numeric_limits<std::int64_t>::max() + b)) {
+        throw MoneyOverflowError("subtraction overflow");
+    }
+    return a - b;
+}
+
 }  // namespace
 
 Money::Money(Currency currency, std::int64_t minor_units) : minor_units_(minor_units), currency_(std::move(currency)) {}
@@ -99,16 +107,14 @@ Money Money::from_decimal_string(Currency currency, std::string_view text) {
 
 std::string Money::to_string() const {
     auto decimals = currency_.decimals();
-    std::int64_t factor = pow10(decimals);
+    auto factor = pow10(decimals);
 
-    std::int64_t value = minor_units_;
-    bool negative = value < 0;
-    if (negative) {
-        value = -value;
-    }
+    const bool negative = minor_units_ < 0;
+    const auto value = negative ? (std::uint64_t{0} - static_cast<std::uint64_t>(minor_units_))
+                                 : static_cast<std::uint64_t>(minor_units_);
 
-    std::int64_t integer = value / factor;
-    std::int64_t fraction = value % factor;
+    const auto integer = value / static_cast<std::uint64_t>(factor);
+    const auto fraction = value % static_cast<std::uint64_t>(factor);
 
     std::string result;
     result.reserve(32);
@@ -117,7 +123,9 @@ std::string Money::to_string() const {
     if (negative) {
         result += '-';
     }
+
     result += std::to_string(integer);
+
     if (decimals > 0) {
         result += '.';
         auto frac_str = std::to_string(fraction);
@@ -126,6 +134,7 @@ std::string Money::to_string() const {
         }
         result += frac_str;
     }
+
     return result;
 }
 
@@ -141,7 +150,8 @@ Money& Money::operator-=(const Money& other) {
     if (currency_ != other.currency_) {
         throw MoneyCurrencyMismatchError("Cannot subtract Money with different currencies");
     }
-    minor_units_ = safe_add(minor_units_, -other.minor_units_);
+
+    minor_units_ = safe_sub(minor_units_, other.minor_units_);
     return *this;
 }
 
@@ -149,6 +159,7 @@ std::strong_ordering operator<=>(const Money& lhs, const Money& rhs) {
     if (lhs.currency_ != rhs.currency_) {
         throw MoneyCurrencyMismatchError("Cannot compare Money with different currencies");
     }
+
     return lhs.minor_units_ <=> rhs.minor_units_;
 }
 

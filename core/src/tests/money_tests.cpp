@@ -106,12 +106,16 @@ TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws_2) {
 
 TEST_F(MoneyTests, GIVEN_IntegerPartOverflow_WHEN_Parsed_THEN_Throws) {
     std::string overflow_str = std::to_string(std::numeric_limits<minorType>::max() / 100 + 1) + ".00";
+
     EXPECT_THROW(Money::from_decimal_string(eur_, overflow_str), MoneyParseError);
 }
 
 TEST_F(MoneyTests, GIVEN_IntegerPartUnderflow_WHEN_Parsed_THEN_Throws) {
     Currency usd("USD", 0);
-    std::string underflow_str = "-" + std::to_string(std::numeric_limits<minorType>::min());
+    std::string underflow_str =
+            std::to_string(std::numeric_limits<minorType>::min())
+                    .substr(1, std::string::npos);
+
     EXPECT_THROW(Money::from_decimal_string(usd, underflow_str), MoneyParseError);
 }
 
