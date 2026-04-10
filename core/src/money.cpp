@@ -5,8 +5,6 @@
 #include <limits>
 #include <stdexcept>
 
-#include "core/src/money_errors.h"
-
 namespace Finances::Core {
 
 namespace {
@@ -254,14 +252,6 @@ Money& Money::operator-=(const Money& other) {
 
     minor_units_ = safe_sub(minor_units_, other.minor_units_);
     return *this;
-}
-
-std::strong_ordering operator<=>(const Money& lhs, const Money& rhs) {
-    if (lhs.currency_ != rhs.currency_) {
-        throw MoneyCurrencyMismatchError("Cannot compare Money with different currencies");
-    }
-
-    return lhs.minor_units_ <=> rhs.minor_units_;
 }
 
 }  // namespace Finances::Core

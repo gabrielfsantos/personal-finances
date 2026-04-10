@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "core/src/currency.h"
+#include "core/src/money_errors.h"
 
 namespace Finances::Core {
 class Money {
@@ -38,7 +39,12 @@ class Money {
         return lhs.currency_ == rhs.currency_ && lhs.minor_units_ == rhs.minor_units_;
     }
 
-    friend std::strong_ordering operator<=>(const Money& lhs, const Money& rhs);
+    friend std::strong_ordering operator<=>(const Money& lhs, const Money& rhs) {
+        if (lhs.currency_ != rhs.currency_) {
+            throw MoneyCurrencyMismatchError("Cannot compare Money with different currencies");
+        }
+        return lhs.minor_units_ <=> rhs.minor_units_;
+    }
 
    private:
     std::int64_t minor_units_;
