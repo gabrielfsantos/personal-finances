@@ -6,7 +6,7 @@ namespace Finances::Core {
 
 class MoneyError : public std::runtime_error {
    public:
-    explicit MoneyError(const std::string& msg) : std::runtime_error(msg) {}
+    using std::runtime_error::runtime_error;
 };
 
 class MoneyParseError : public MoneyError {

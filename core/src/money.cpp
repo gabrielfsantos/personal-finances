@@ -162,7 +162,7 @@ void validateIntegerOverflow(std::int64_t integer, std::int64_t factor) {
     }
 }
 
-auto generateMinor(DecimalStrParts decimalStrParts, Currency currency) {
+auto generateMinor(const DecimalStrParts& decimalStrParts, const Currency& currency) {
     auto integer = convertIntegerPart(decimalStrParts.integer);
 
     validateFractionalPrecision(decimalStrParts.fraction, currency.decimals());
