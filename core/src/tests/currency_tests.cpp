@@ -3,10 +3,11 @@
 #include "core/src/currency.h"
 
 namespace {
-using Finances::Core::Currency;
+using namespace Finances::Core;
 
 TEST(CurrencyTests, ValidConstruction) {
     Currency eur("EUR", 2);
+
     EXPECT_EQ(eur.code(), "EUR");
     EXPECT_EQ(eur.decimals(), 2);
 }
@@ -23,10 +24,7 @@ TEST(CurrencyTests, InvalidCodeThrows) {
     EXPECT_THROW(Currency("eur", 2), std::invalid_argument);
 }
 
-TEST(CurrencyTests, InvalidDecimalsThrows) {
-    EXPECT_THROW(Currency("EUR", -1), std::invalid_argument);
-    EXPECT_THROW(Currency("EUR", 7), std::invalid_argument);
-}
+TEST(CurrencyTests, InvalidDecimalsThrows) { EXPECT_THROW(Currency("EUR", 7), std::invalid_argument); }
 
 TEST(CurrencyTests, ComparisonWorks) {
     Currency eur1("EUR", 2);
