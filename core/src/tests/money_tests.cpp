@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
 
+#include <format>
+#include <memory>
+
 #include "core/src/currency.h"
 #include "core/src/money.h"
 #include "core/src/money_errors.h"
 
 namespace {
 using namespace Finances::Core;
-
-using minorType = decltype(std::declval<Money>().minor_units());
 
 class MoneyTests : public ::testing::Test {
    protected:
@@ -31,11 +32,11 @@ TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_negative_THEN_MinorUnitsAreCorr
 }
 
 TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_overflow_THEN_Throws) {
-    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<minorType>::max()), MoneyOverflowError);
+    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<std::int64_t>::max()), MoneyOverflowError);
 }
 
 TEST_F(MoneyTests, GIVEN_EUR_WHEN_FromMajor_with_underflow_THEN_Throws) {
-    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<minorType>::min()), MoneyOverflowError);
+    EXPECT_THROW(Money::from_major(eur_, std::numeric_limits<std::int64_t>::min()), MoneyOverflowError);
 }
 
 TEST_F(MoneyTests, GIVEN_DecimalString_WHEN_Parsed_THEN_MinorUnitsMatch) {
@@ -52,27 +53,6 @@ TEST_F(MoneyTests, GIVEN_NoFraction_WHEN_Parsed_THEN_FractionDefaultsToZero) {
     EXPECT_EQ(m.to_string(), "EUR 7.00");
 }
 
-TEST_F(MoneyTests, GIVEN_OnlyFraction_WHEN_Parsed_THEN_IntegerDefaultsToZero) {
-    Money m = Money::from_decimal_string(eur_, ".5");
-
-    EXPECT_EQ(m.minor_units(), 50);
-    EXPECT_EQ(m.to_string(), "EUR 0.50");
-}
-
-TEST_F(MoneyTests, GIVEN_EmptyString_WHEN_Parsed_THEN_MoneyIsZero) {
-    Money m = Money::from_decimal_string(eur_, "");
-
-    EXPECT_EQ(m.minor_units(), 0);
-    EXPECT_EQ(m.to_string(), "EUR 0.00");
-}
-
-TEST_F(MoneyTests, GIVEN_OnlyInteger_WHEN_Parsed_THEN_FractionDefaultsToZero) {
-    Money m = Money::from_decimal_string(eur_, "1.");
-
-    EXPECT_EQ(m.minor_units(), 100);
-    EXPECT_EQ(m.to_string(), "EUR 1.00");
-}
-
 TEST_F(MoneyTests, GIVEN_NegativeDecimal_WHEN_Parsed_THEN_MoneyIsNegative) {
     Money m = Money::from_decimal_string(eur_, "-1.23");
 
@@ -84,6 +64,10 @@ TEST_F(MoneyTests, GIVEN_TooManyFractionDigits_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "1.234"), MoneyParseError);
 }
 
+TEST_F(MoneyTests, GIVEN_TooManyZerosToTheRight_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.230000"), MoneyParseError);
+}
+
 TEST_F(MoneyTests, GIVEN_InvalidInteger_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "A.23"), MoneyParseError);
 }
@@ -92,31 +76,68 @@ TEST_F(MoneyTests, GIVEN_InvalidFraction_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "1.A"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws) {
+TEST_F(MoneyTests, GIVEN_InvalidIntegerCharacter_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "A"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws_1) {
+TEST_F(MoneyTests, GIVEN_IntegerNumberAndInvalidCharacter_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "1A"), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_InvalidNumber_WHEN_Parsed_THEN_Throws_2) {
+TEST_F(MoneyTests, GIVEN_FractionalNumberAndInvalidCharacter_WHEN_Parsed_THEN_Throws) {
     EXPECT_THROW(Money::from_decimal_string(eur_, "1.2A"), MoneyParseError);
 }
 
+TEST_F(MoneyTests, GIVEN_SingleCharacterMinus_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "-"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_DotWithoutNumbers_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "."), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_IntegerPartAbsent_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, ".5"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_NegativeNumberAndAbsentIntegerPart_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "-.5"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_LeadingZeros_WHEN_Parsed_THEN_IgnoresLeadingZeros) {
+    Money a = Money::from_decimal_string(eur_, "0001.23");
+
+    EXPECT_EQ(a.minor_units(), 123);
+    EXPECT_EQ(a.to_string(), "EUR 1.23");
+}
+
+TEST_F(MoneyTests, GIVEN_MoreThanOneDecimalPoint_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.2.3"), std::exception);
+}
+
+TEST_F(MoneyTests, GIVEN_TwoMinusSigns_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "--1.23"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_MinusSignInFractionalPart_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1.-23"), MoneyParseError);
+}
+
+TEST_F(MoneyTests, GIVEN_IntegerNumberAndInvalidCharacterAndFractionalPart_WHEN_Parsed_THEN_Throws) {
+    EXPECT_THROW(Money::from_decimal_string(eur_, "1A.23"), MoneyParseError);
+}
+
 TEST_F(MoneyTests, GIVEN_IntegerPartOverflow_WHEN_Parsed_THEN_Throws) {
-    std::string overflow_str = std::to_string(std::numeric_limits<minorType>::max() / 100 + 1) + ".00";
+    const auto overflow_str = std::format("{}.00", std::numeric_limits<std::int64_t>::max() / 100 + 1);
 
     EXPECT_THROW(Money::from_decimal_string(eur_, overflow_str), MoneyParseError);
 }
 
-TEST_F(MoneyTests, GIVEN_IntegerPartUnderflow_WHEN_Parsed_THEN_Throws) {
+TEST_F(MoneyTests, GIVEN_AbsoluteIntegerPartOverflow_WHEN_Parsed_THEN_Throws) {
     Currency usd("USD", 0);
-    std::string underflow_str =
-            std::to_string(std::numeric_limits<minorType>::min())
-                    .substr(1, std::string::npos);
+    const std::string min_str = std::to_string(std::numeric_limits<std::int64_t>::min());
 
-    EXPECT_THROW(Money::from_decimal_string(usd, underflow_str), MoneyParseError);
+    EXPECT_THROW(Money::from_decimal_string(usd, min_str), MoneyParseError);
 }
 
 TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_Added_THEN_ResultIsCorrect) {
@@ -140,14 +161,14 @@ TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_Subtracted_THEN_ResultIsCorrect) {
 }
 
 TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_AddedWithOverflow_THEN_Throws) {
-    Money a = Money(eur_, std::numeric_limits<minorType>::max() - 100);
+    Money a = Money(eur_, std::numeric_limits<std::int64_t>::max() - 100);
     Money b = Money(eur_, 225);
 
     EXPECT_THROW(a + b, MoneyOverflowError);
 }
 
 TEST_F(MoneyTests, GIVEN_SameCurrency_WHEN_AddedWithUnderflow_THEN_Throws) {
-    Money a = Money(eur_, std::numeric_limits<minorType>::min() + 100);
+    Money a = Money(eur_, std::numeric_limits<std::int64_t>::min() + 100);
     Money b = Money(eur_, 225);
 
     EXPECT_THROW(a - b, MoneyOverflowError);
