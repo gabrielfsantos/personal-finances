@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
+# load("//tools/lint:linters.bzl", "clang_tidy", "clang_tidy_test")
 
 cc_library(
     name = "currency",
@@ -30,3 +31,16 @@ cc_library(
     visibility = ["//core/src/tests:__subpackages__"],
     deps = [":money"],
 )
+
+cc_library(
+    name = "hello_world",
+    srcs = ["main.cpp"],
+)
+
+# clang_tidy_test(
+#     name = "main_test",
+#     srcs = [
+#         # ":hello_world",
+#         ":transaction",
+#     ],
+# )

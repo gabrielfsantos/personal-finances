@@ -1,0 +1,36 @@
+"""Definition of the formatter binary
+
+This is in its own package because it has so many loading-time symbols,
+we don't want to trigger eager fetches of these for builds that don't want to run format.
+"""
+
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+# load("@bazel_tools//tools/build_defs/sh:sh.bzl", "sh_binary")
+
+package(default_visibility = ["//:__subpackages__"])
+
+native_binary(
+    name = "clang_tidy",
+    # src = select(
+    #     {
+    #         "@bazel_tools//src/conditions:linux_x86_64": "@llvm_toolchain_llvm//:bin/clang-tidy",
+    #         "@bazel_tools//src/conditions:linux_aarch64": "@llvm_toolchain_llvm//:bin/clang-tidy",
+    #         "@bazel_tools//src/conditions:darwin_x86_64": "@llvm_toolchain_llvm//:bin/clang-tidy",
+    #         "@bazel_tools//src/conditions:darwin_arm64": "@llvm_toolchain_llvm//:bin/clang-tidy",
+    #     },
+    # ),
+    src = "@llvm_toolchain_llvm//:bin/clang-tidy",
+    out = "clang_tidy",
+)
+# sh_binary(
+#     name = "clang_tidy_runner",
+#     srcs = ["clang_tidy_runner.sh"],
+#     visibility = ["//visibility:public"],
+# )
+
+native_binary(
+    name = "clang_tidy_runner",
+    src = "clang_tidy_runner.sh",
+    out = "clang_tidy_runner",
+    visibility = ["//visibility:public"],
+)

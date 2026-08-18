@@ -43,11 +43,12 @@ build:tsan --linkopt=-fsanitize=thread
 build:tsan --strip=never
 
 # Clang-Tidy build
-build:tidy --features=clang-tidy
-build:tidy --config=debug
-build:tidy --copt=-fno-omit-frame-pointer
-build:tidy --cxxopt=-fno-omit-frame-pointer
-build:tidy --action_env=CLANG_TIDY=external/toolchains_llvm~~llvm~llvm_toolchain/bin/clang-tidy
+# build:tidy --features=clang-tidy
+# build:tidy --config=debug
+# build:tidy --copt=-fno-omit-frame-pointer
+# build:tidy --cxxopt=-fno-omit-frame-pointer
+# # build:tidy --action_env=CLANG_TIDY=external/toolchains_llvm~~llvm~llvm_toolchain/bin/clang-tidy
+# build:tidy --action_env=CLANG_TIDY="@llvm_toolchain_llvm//:bin/clang-tidy"
 
 # Debug build
 build:debug --compilation_mode=dbg
@@ -77,3 +78,9 @@ build:sanitized --build_tag_filters=-no_sanitize
 test:sanitized --test_tag_filters=-no_sanitize
 
 test --test_output=errors
+
+
+
+build:lint --aspects=//tools/lint:linters.bzl%clang_tidy
+build:lint --@aspect_rules_lint//lint:fail_on_violation
+# build:lint --output_groups=report
