@@ -15,6 +15,6 @@ Checks: >
   -google-readability-braces-around-statements,
   -cppcoreguidelines-avoid-magic-numbers
 
-WarningsAsErrors: ''
+WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle:     none

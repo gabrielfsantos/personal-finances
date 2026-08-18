@@ -43,11 +43,10 @@ build:tsan --linkopt=-fsanitize=thread
 build:tsan --strip=never
 
 # Clang-Tidy build
-build:tidy --features=clang-tidy
-build:tidy --config=debug
-build:tidy --copt=-fno-omit-frame-pointer
-build:tidy --cxxopt=-fno-omit-frame-pointer
-build:tidy --action_env=CLANG_TIDY=external/toolchains_llvm~~llvm~llvm_toolchain/bin/clang-tidy
+build:tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:tidy --output_groups=report
+build:tidy --@bazel_clang_tidy//:clang_tidy_config=//:clang_tidy_config
+build:tidy --@bazel_clang_tidy//:clang_tidy_executable=@llvm_toolchain//:clang-tidy
 
 # Debug build
 build:debug --compilation_mode=dbg

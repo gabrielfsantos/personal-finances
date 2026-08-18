@@ -4,8 +4,8 @@ package(default_visibility = ["//:__subpackages__"])
 
 format_multirun(
     name = "format",
-    c = "@llvm_toolchain_llvm//:bin/clang-format",
-    cc = "@llvm_toolchain_llvm//:bin/clang-format",
+    c = "@llvm_toolchain//:clang-format",
+    cc = "@llvm_toolchain//:clang-format",
     starlark = "@buildifier_prebuilt//:buildifier",
     visibility = ["//:__subpackages__"],
 )
