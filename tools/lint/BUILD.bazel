@@ -19,7 +19,7 @@ native_binary(
     #         "@bazel_tools//src/conditions:darwin_arm64": "@llvm_toolchain_llvm//:bin/clang-tidy",
     #     },
     # ),
-    src = "@llvm_toolchain_llvm//:bin/clang-tidy",
+    src = "@llvm_toolchain//:clang-tidy",
     out = "clang_tidy",
 )
 # sh_binary(
