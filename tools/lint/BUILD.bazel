@@ -5,3 +5,10 @@ native_binary(
     src = "@llvm_toolchain//:clang-tidy",
     out = "clang_tidy",
 )
+
+sh_binary(
+    name = "clang_tidy_runner",
+    srcs = ["clang_tidy_runner.sh"],
+    data = [":clang_tidy"],
+    visibility = ["//visibility:public"],
+)
