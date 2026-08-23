@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_test")
+load("//tools/lint:linters.bzl", "clang_tidy_test")
 
 cc_test(
     name = "currency_tests",
@@ -8,6 +9,11 @@ cc_test(
         "//core/src:currency",
         "@googletest//:gtest_main",
     ],
+)
+
+clang_tidy_test(
+    name = "currency_lint_test",
+    srcs = ["//core/src:currency"],
 )
 
 cc_test(
@@ -20,6 +26,16 @@ cc_test(
     ],
 )
 
+clang_tidy_test(
+    name = "money_errors_lint_test",
+    srcs = ["//core/src:money_errors"],
+)
+
+clang_tidy_test(
+    name = "money_lint_test",
+    srcs = ["//core/src:money"],
+)
+
 cc_test(
     name = "transaction_tests",
     srcs = ["transaction_tests.cpp"],
@@ -28,4 +44,9 @@ cc_test(
         "//core/src:transaction",
         "@googletest//:gtest_main",
     ],
+)
+
+clang_tidy_test(
+    name = "transaction_lint_test",
+    srcs = ["//core/src:transaction"],
 )
