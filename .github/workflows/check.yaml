@@ -21,24 +21,64 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check Depends-On
+      - name: Check Depends-On Status
         uses: depends-on/depends-on-action@c7ac9a6932a7069e83aef80c202d9f60f91e43fd
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  prepare-workspace:
+    needs: check-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Base Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Fetch and Merge Dependent PR
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          DEPENDS_ON_URL=$(echo "$PR_BODY" | grep -iE "depends-on:" | head -n 1 | awk '{print $2}')
+
+          if [ -n "$DEPENDS_ON_URL" ]; then
+            PR_NUMBER=$(echo "$DEPENDS_ON_URL" | grep -oE '[0-9]+$')
+            echo "Dependency detected: PR #$PR_NUMBER"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            git fetch origin pull/$PR_NUMBER/head:dependent-pr-$PR_NUMBER
+            git merge dependent-pr-$PR_NUMBER --no-edit || (echo "Failed to merge dependent PR" && exit 1)
+          else
+            echo "No Depends-On dependency found"
+          fi
+
+      - name: Upload Prepared Workspace
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: prepared-workspace-${{ github.run_id }}
+          path: .
+          retention-days: 1
+
   format-check:
     runs-on: ubuntu-latest
-    needs: check-dependencies
+    needs: prepare-workspace
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Download Prepared Workspace
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: prepared-workspace-${{ github.run_id }}
 
-      - name: Cache Bazel
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
           key: bazel-check-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            bazel-release-${{ runner.os }}-
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
@@ -48,17 +88,22 @@ jobs:
 
   lint-tidy:
     runs-on: ubuntu-latest
-    needs: check-dependencies
+    needs: prepare-workspace
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Download Prepared Workspace
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: prepared-workspace-${{ github.run_id }}
 
-      - name: Cache Bazel
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
           key: bazel-check-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            bazel-release-${{ runner.os }}-
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
@@ -68,7 +113,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: check-dependencies
+    needs: prepare-workspace
 
     strategy:
       fail-fast: false
@@ -76,15 +121,20 @@ jobs:
         config: [debug, release, sanitized]
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Download Prepared Workspace
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: prepared-workspace-${{ github.run_id }}
 
-      - name: Cache Bazel
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
           key: bazel-check-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            bazel-release-${{ runner.os }}-
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
@@ -101,15 +151,20 @@ jobs:
         config: [debug, release, asan]
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Download Prepared Workspace
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: prepared-workspace-${{ github.run_id }}
 
-      - name: Cache Bazel
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
           key: bazel-check-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            bazel-release-${{ runner.os }}-
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
