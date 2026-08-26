@@ -39,17 +39,29 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          DEPENDS_ON_URL=$(echo "$PR_BODY" | grep -iE "depends-on:" | head -n 1 | awk '{print $2}')
+          DEPENDS_ON_LINE=$(echo "$PR_BODY" | grep -iE "depends-on:" | head -n 1)
 
-          if [ -n "$DEPENDS_ON_URL" ]; then
-            PR_NUMBER=$(echo "$DEPENDS_ON_URL" | grep -oE '[0-9]+$')
-            echo "Dependency detected: PR #$PR_NUMBER"
+          if [ -n "$DEPENDS_ON_LINE" ]; then
+            PR_NUMBER=$(echo "$DEPENDS_ON_LINE" | grep -oE '[0-9]+' | head -n 1)
 
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            if [ -n "$PR_NUMBER" ]; then
+              echo "Dependency detected: PR #$PR_NUMBER"
 
-            git fetch origin pull/$PR_NUMBER/head:dependent-pr-$PR_NUMBER
-            git merge dependent-pr-$PR_NUMBER --no-edit || (echo "Failed to merge dependent PR" && exit 1)
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+
+              echo "Fetching PR #$PR_NUMBER..."
+              git fetch origin pull/$PR_NUMBER/head:dependent-pr-$PR_NUMBER
+
+              echo "Merging PR #$PR_NUMBER into current workspace..."
+              git merge dependent-pr-$PR_NUMBER --allow-unrelated-histories --no-edit || {
+                echo "::error::Failed to merge PR #$PR_NUMBER due to conflicts or git merge error."
+                git status
+                exit 1
+              }
+            else
+              echo "Depends-On tag found, but no valid PR number could be extracted."
+            fi
           else
             echo "No Depends-On dependency found"
           fi
@@ -59,6 +71,7 @@ jobs:
         with:
           name: prepared-workspace-${{ github.run_id }}
           path: .
+          include-hidden-files: true
           retention-days: 1
 
   format-check:
