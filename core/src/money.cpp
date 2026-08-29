@@ -1,36 +1,44 @@
 #include "core/src/money.h"
 
 #include <charconv>
-#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
-#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
+
+#include "core/src/currency.h"
+#include "core/src/money_errors.h"
 
 namespace Finances::Core {
 
 namespace {
+constexpr std::int64_t decimal_base = 10;
 
 auto pow10(unsigned int n) {
     std::int64_t result = 1;
     while (n-- > 0) {
-        result *= 10;
+        result *= decimal_base;
     }
     return result;
 }
 
-auto safe_add(std::int64_t a, std::int64_t b) {
-    if ((b > 0 && a > std::numeric_limits<std::int64_t>::max() - b) ||
-        (b < 0 && a < std::numeric_limits<std::int64_t>::min() - b)) {
+auto safe_add(std::int64_t lhs, std::int64_t rhs) {
+    if ((rhs > 0 && lhs > std::numeric_limits<std::int64_t>::max() - rhs) ||
+        (rhs < 0 && lhs < std::numeric_limits<std::int64_t>::min() - rhs)) {
         throw MoneyOverflowError("addition overflow");
     }
-    return a + b;
+    return lhs + rhs;
 }
 
-auto safe_sub(std::int64_t a, std::int64_t b) {
-    if ((b > 0 && a < std::numeric_limits<std::int64_t>::min() + b) ||
-        (b < 0 && a > std::numeric_limits<std::int64_t>::max() + b)) {
+auto safe_sub(std::int64_t lhs, std::int64_t rhs) {
+    if ((rhs > 0 && lhs < std::numeric_limits<std::int64_t>::min() + rhs) ||
+        (rhs < 0 && lhs > std::numeric_limits<std::int64_t>::max() + rhs)) {
         throw MoneyOverflowError("subtraction overflow");
     }
-    return a - b;
+    return lhs - rhs;
 }
 
 auto handleNegativeDecimalString(std::string_view& text) {
@@ -48,13 +56,13 @@ auto handleNegativeDecimalString(std::string_view& text) {
 }
 
 void validateCharsAndDots(std::string_view text) {
-    auto dot_count = 0u;
-    for (auto c : text) {
-        if (c == '.') {
+    auto dot_count = 0U;
+    for (auto letter : text) {
+        if (letter == '.') {
             ++dot_count;
             continue;
         }
-        if (c < '0' || c > '9') {
+        if (letter < '0' || letter > '9') {
             throw MoneyParseError("Invalid character in decimal string");
         }
     }
@@ -215,9 +223,10 @@ std::string Money::to_string() const {
     const auto integer = value / static_cast<std::uint64_t>(factor);
     const auto fraction = value % static_cast<std::uint64_t>(factor);
 
+    constexpr std::size_t kMaxSize = 32;
     std::string result;
-    result.reserve(32);
-    result += std::string(currency_.code());
+    result.reserve(kMaxSize);
+    result += currency_.code();
     result += ' ';
     if (negative) {
         result += '-';

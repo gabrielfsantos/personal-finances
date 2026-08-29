@@ -1,7 +1,6 @@
 #pragma once
 #include <compare>
 #include <cstdint>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -17,10 +16,10 @@ class Money {
     static Money from_major(Currency currency, std::int64_t major);
     static Money from_decimal_string(Currency currency, std::string_view text);
 
-    const Currency& currency() const noexcept { return currency_; }
-    std::int64_t minor_units() const noexcept { return minor_units_; }
+    [[nodiscard]] const Currency& currency() const noexcept { return currency_; }
+    [[nodiscard]] std::int64_t minor_units() const noexcept { return minor_units_; }
 
-    std::string to_string() const;
+    [[nodiscard]] std::string to_string() const;
 
     Money& operator+=(const Money& other);
     Money& operator-=(const Money& other);
