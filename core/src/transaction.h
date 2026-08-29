@@ -1,24 +1,32 @@
 #pragma once
-#include <optional>
+#include <chrono>
 #include <string>
+#include <string_view>
 
 #include "core/src/money.h"
 
 namespace Finances::Core {
-
-enum class TransactionType { Income, Expense };
-
 class Transaction {
    public:
-    std::string id;
-    TransactionType type;
-    Money amount;
-    std::string category_id;
-    long timestamp;
-    std::optional<std::string> description;
+    enum class Type { Income, Expense };
 
-    Transaction(TransactionType type, Money amount, const std::string& category_id, long timestamp,
-                const std::optional<std::string>& description);
+    Transaction(Type type, Money amount, std::string category_id, std::chrono::year_month_day date,
+                std::string description);
+
+    [[nodiscard]] std::string_view getId() const noexcept;
+    [[nodiscard]] std::string_view getCategoryId() const noexcept;
+    [[nodiscard]] Type getType() const noexcept;
+    [[nodiscard]] Money getAmount() const;
+    [[nodiscard]] std::chrono::year_month_day getDate() const noexcept;
+    [[nodiscard]] std::string_view getDescription() const noexcept;
+
+   private:
+    std::string id_;
+    Type type_;
+    Money amount_;
+    std::string category_id_;
+    std::chrono::year_month_day date_;
+    std::string description_;
 };
 
 }  // namespace Finances::Core

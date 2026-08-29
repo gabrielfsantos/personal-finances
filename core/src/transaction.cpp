@@ -1,30 +1,52 @@
 #include "core/src/transaction.h"
 
+#include <chrono>
+#include <cstddef>
 #include <random>
+#include <string>
+#include <string_view>
+#include <utility>
+
+#include "core/src/money.h"
 
 namespace Finances::Core {
-
-static std::string generate_id() {
+namespace {
+std::string generate_id() {
     thread_local std::mt19937 gen(std::random_device{}());
-    std::uniform_int_distribution dis(0, 15);
+    constexpr int kMaxHexValue = 15;
+    std::uniform_int_distribution dis(0, kMaxHexValue);
 
-    const char* hex = "0123456789abcdef";
-    std::string uuid(32, '0');
+    constexpr std::size_t kUuidSize = 32;
+    constexpr std::string_view hex = "0123456789abcdef";
+    std::string uuid(kUuidSize, '0');
 
-    for (std::size_t i = 0; i < 32; i++) {
-        uuid[i] = hex[dis(gen)];
+    for (std::size_t i = 0; i < kUuidSize; i++) {
+        uuid[i] = hex.at(static_cast<std::size_t>(dis(gen)));
     }
 
     return uuid;
 }
+}  // namespace
 
-Transaction::Transaction(TransactionType type, Money amount, const std::string& category_id, long timestamp,
-                         const std::optional<std::string>& description)
-    : id(generate_id()),
-      type(type),
-      amount(amount),
-      category_id(category_id),
-      timestamp(timestamp),
-      description(description) {}
+Transaction::Transaction(Type type, Money amount, std::string category_id, std::chrono::year_month_day date,
+                         std::string description)
+    : id_(generate_id()),
+      type_(type),
+      amount_(std::move(amount)),
+      category_id_(std::move(category_id)),
+      date_(date),
+      description_(std::move(description)) {}
+
+std::string_view Transaction::getId() const noexcept { return id_; }
+
+std::string_view Transaction::getCategoryId() const noexcept { return category_id_; }
+
+Transaction::Type Transaction::getType() const noexcept { return type_; }
+
+Money Transaction::getAmount() const { return amount_; }
+
+std::chrono::year_month_day Transaction::getDate() const noexcept { return date_; }
+
+std::string_view Transaction::getDescription() const noexcept { return description_; }
 
 }  // namespace Finances::Core
