@@ -13,7 +13,8 @@ Checks: >
   llvm-*,
   -llvm-header-guard,
   -google-readability-braces-around-statements,
-  -cppcoreguidelines-avoid-magic-numbers
+  -cppcoreguidelines-avoid-magic-numbers,
+  -modernize-use-trailing-return-type
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
