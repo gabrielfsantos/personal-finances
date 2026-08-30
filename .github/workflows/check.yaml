@@ -38,33 +38,8 @@ jobs:
       - name: Fetch and Merge Dependent PR
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          DEPENDS_ON_LINE=$(echo "$PR_BODY" | grep -iE "depends-on:" | head -n 1)
-
-          if [ -n "$DEPENDS_ON_LINE" ]; then
-            PR_NUMBER=$(echo "$DEPENDS_ON_LINE" | grep -oE '[0-9]+' | head -n 1)
-
-            if [ -n "$PR_NUMBER" ]; then
-              echo "Dependency detected: PR #$PR_NUMBER"
-
-              git config user.name "github-actions[bot]"
-              git config user.email "github-actions[bot]@users.noreply.github.com"
-
-              echo "Fetching PR #$PR_NUMBER..."
-              git fetch origin pull/$PR_NUMBER/head:dependent-pr-$PR_NUMBER
-
-              echo "Merging PR #$PR_NUMBER into current workspace..."
-              git merge dependent-pr-$PR_NUMBER --allow-unrelated-histories --no-edit || {
-                echo "::error::Failed to merge PR #$PR_NUMBER due to conflicts or git merge error."
-                git status
-                exit 1
-              }
-            else
-              echo "Depends-On tag found, but no valid PR number could be extracted."
-            fi
-          else
-            echo "No Depends-On dependency found"
-          fi
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/merge-dependencies.sh
 
       - name: Upload Prepared Workspace
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
