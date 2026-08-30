@@ -25,10 +25,7 @@ extract_deps() {
   echo "$extracted"
 }
 
-echo "[DEBUG] PR_BODY length: ${#PR_BODY}"
 INITIAL_DEPS=$(extract_deps "${PR_BODY:-}")
-echo "[DEBUG] Initial extracted dependencies:$INITIAL_DEPS"
-
 PR_QUEUE="$INITIAL_DEPS"
 RESOLVED_ORDER=""
 
@@ -41,24 +38,38 @@ while [ -n "$PR_QUEUE" ]; do
     continue
   fi
 
-  echo "Resolving dependencies for PR #$CURRENT_PR..."
+  echo "Inspecting dependent PR #$CURRENT_PR..."
   PROCESSED_PRS="$PROCESSED_PRS $CURRENT_PR"
-  RESOLVED_ORDER="$RESOLVED_ORDER $CURRENT_PR"
 
-  DEP_BODY=$(gh pr view "$CURRENT_PR" --json body --jq '.body' 2>/dev/null || true)
+  PR_INFO=$(gh pr view "$CURRENT_PR" --json state,body --jq '{state: .state, body: .body}' 2>/dev/null || true)
 
-  if [ -n "$DEP_BODY" ]; then
-    NESTED_DEPS=$(extract_deps "$DEP_BODY")
-    if [ -n "$NESTED_DEPS" ]; then
-      echo "Found nested dependencies in PR #$CURRENT_PR: $NESTED_DEPS"
-      PR_QUEUE="$PR_QUEUE $NESTED_DEPS"
+  if [ -n "$PR_INFO" ]; then
+    PR_STATE=$(echo "$PR_INFO" | jq -r '.state' 2>/dev/null || true)
+    DEP_BODY=$(echo "$PR_INFO" | jq -r '.body' 2>/dev/null || true)
+
+    if [ "$PR_STATE" != "OPEN" ]; then
+      echo "PR #$CURRENT_PR is $PR_STATE. Skipping merge."
+      continue
     fi
+
+    RESOLVED_ORDER="$RESOLVED_ORDER $CURRENT_PR"
+
+    if [ -n "$DEP_BODY" ]; then
+      NESTED_DEPS=$(extract_deps "$DEP_BODY")
+      if [ -n "$NESTED_DEPS" ]; then
+        echo "Found nested dependencies in PR #$CURRENT_PR: $NESTED_DEPS"
+        PR_QUEUE="$PR_QUEUE $NESTED_DEPS"
+      fi
+    fi
+  else
+    echo "Warning: Could not fetch details for PR #$CURRENT_PR. Proceeding with fallback fetch."
+    RESOLVED_ORDER="$RESOLVED_ORDER $CURRENT_PR"
   fi
 done
 
 if [ -n "$RESOLVED_ORDER" ]; then
   echo "--------------------------------------------------"
-  echo "Final merge order for dependencies:$RESOLVED_ORDER"
+  echo "Final merge order for open dependencies:$RESOLVED_ORDER"
   echo "--------------------------------------------------"
 
   for PR_NUMBER in $RESOLVED_ORDER; do
@@ -72,7 +83,7 @@ if [ -n "$RESOLVED_ORDER" ]; then
       exit 1
     }
   done
-  echo "All recursive dependencies merged successfully!"
+  echo "All open recursive dependencies merged successfully!"
 else
-  echo "No Depends-On dependencies found."
+  echo "No active Depends-On dependencies to merge."
 fi
