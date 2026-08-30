@@ -55,6 +55,10 @@ build:debug --copt=-O0
 build:debug --cxxopt=-O0
 build:debug --strip=never
 
+# Fastbuild build
+build:fastbuild --compilation_mode=fastbuild
+build:fastbuild --strip=never
+
 # Release build
 build:release --compilation_mode=opt
 build:release --copt=-O3
