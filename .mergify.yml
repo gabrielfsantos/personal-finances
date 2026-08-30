@@ -1,0 +1,29 @@
+queue_rules:
+  - name: default
+    merge_method: squash
+    queue_conditions:
+      - base = master
+      - check-success = check-dependencies
+      - check-success = prepare-workspace
+      - check-success = format-check
+      - check-success = lint-tidy
+      - check-success = build-and-test
+      - check-success = build-sanitized
+    merge_conditions:
+      - check-success = "Build and Test Release"
+      - check-success = "Build Sanitized (sanitized)"
+      - check-success = "Build Sanitized (tsan)"
+
+pull_request_rules:
+  - name: Automatically queue PRs when reviews and check workflow pass
+    conditions:
+      - base = master
+      - check-success = check-dependencies
+      - check-success = prepare-workspace
+      - check-success = format-check
+      - check-success = lint-tidy
+      - check-success = build-and-test
+      - check-success = build-sanitized
+    actions:
+      queue:
+        name: default
