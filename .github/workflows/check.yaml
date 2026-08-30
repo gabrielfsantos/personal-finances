@@ -97,7 +97,7 @@ jobs:
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
 
       - name: Lint / Tidy
-        run: bazel build //... --config=tidy
+        run: bazel build --config=tidy //...
 
   build-and-test:
     runs-on: ubuntu-latest
@@ -122,9 +122,35 @@ jobs:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-check-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
+          key: bazel-check-${{ matrix.config }}-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
           restore-keys: |
-            bazel-release-${{ runner.os }}-${{ matrix.config }}-
+            bazel-release-${{ matrix.config }}-${{ runner.os }}-
 
       - name: Test
-        run: bazel test //... --config=${{ matrix.config }}
+        run: bazel test --config=${{ matrix.config }} //...
+
+  build-sanitizers:
+    runs-on: ubuntu-latest
+    needs: prepare-workspace
+
+    steps:
+      - name: Download Prepared Workspace
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: prepared-workspace-${{ github.run_id }}
+
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
+
+      - name: Restore Bazel Cache
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-check-sanitizers-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
+          restore-keys: |
+            bazel-release-sanitizers-${{ runner.os }}-
+
+      - name: Sanitize
+        run: bazel build --config=sanitizers //...

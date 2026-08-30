@@ -2,26 +2,30 @@ queue_rules:
   - name: default
     merge_method: squash
     queue_conditions:
+      - base = master
       - check-success = check-dependencies
       - check-success = prepare-workspace
       - check-success = format-check
       - check-success = lint-tidy
       - check-success = build-and-test
+      - check-success = build-sanitizers
       - "#approved-reviews-by-requested-changes = 0"
       - "#approved-reviews-by >= 0"
     merge_conditions:
-      - check-success = "Build Gate (release)"
-      - check-success = "Build Gate (sanitized)"
-      - check-success = "Build Gate (tsan)"
+      - check-success = "Build and Test Release"
+      - check-success = "Build Sanitizers (sanitized)"
+      - check-success = "Build Sanitizers (tsan)"
 
 pull_request_rules:
   - name: Automatically queue PRs when reviews and check workflow pass
     conditions:
+      - base = master
       - check-success = check-dependencies
       - check-success = prepare-workspace
       - check-success = format-check
       - check-success = lint-tidy
       - check-success = build-and-test
+      - check-success = build-sanitizers
       - "#approved-reviews-by-requested-changes = 0"
       - "#approved-reviews-by >= 0"
     actions:
