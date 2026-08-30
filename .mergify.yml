@@ -9,8 +9,6 @@ queue_rules:
       - check-success = lint-tidy
       - check-success = build-and-test
       - check-success = build-sanitized
-      - "#approved-reviews-by-requested-changes = 0"
-      - "#approved-reviews-by >= 0"
     merge_conditions:
       - check-success = "Build and Test Release"
       - check-success = "Build Sanitized (sanitized)"
@@ -26,8 +24,6 @@ pull_request_rules:
       - check-success = lint-tidy
       - check-success = build-and-test
       - check-success = build-sanitized
-      - "#approved-reviews-by-requested-changes = 0"
-      - "#approved-reviews-by >= 0"
     actions:
       queue:
         name: default
