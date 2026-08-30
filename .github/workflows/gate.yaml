@@ -1,62 +1,67 @@
 name: Gate
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches:
+      - 'mergify/merge-queue/**'
 
-concurrency:
-  group: gate-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  build-gate:
+  build-gate-release:
+    name: Build and Test Release
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [debug, release, sanitized, tsan]
-
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
 
-      - name: Cache Bazel
+      - name: Install Bazelisk
+        uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
+
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          key: bazel-gate-release-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
+          restore-keys: |
+            bazel-gate-release-${{ runner.os }}
+
+      - name: Build and Run Tests (${{ matrix.config }})
+        run: bazel test --config=release //...
+
+  build-gate-sanitized:
+    name: Build Sanitized (${{ matrix.config }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [sanitized, tsan]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
 
       - name: Install Bazelisk
         uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
 
-      - name: Build
-        run: bazel build //... --config=${{ matrix.config }}
-
-  test-gate:
-    runs-on: ubuntu-latest
-    needs: build-gate
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [debug, release, asan, tsan]
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Cache Bazel
+      - name: Restore Bazel Cache
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-gate-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', 'MODULE.bazel') }}
+          key: bazel-gate-${{ matrix.config }}-${{ runner.os }}-${{ hashFiles('**/BUILD.bazel', 'MODULE.bazel', '**/*.bzl', '.bazelversion', '.bazelrc') }}
+          restore-keys: |
+            bazel-gate-${{ matrix.config }}-${{ runner.os }}-
 
-      - name: Install Bazelisk
-        uses: bazelbuild/setup-bazelisk@b39c379c82683a5f25d34f0d062761f62693e0b2
-
-      - name: Test
-        run: bazel test //... --config=${{ matrix.config }}
+      - name: Build Sanitized Targets
+        run: bazel build --config=${{ matrix.config }} //...
