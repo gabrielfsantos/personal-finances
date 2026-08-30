@@ -8,13 +8,13 @@ queue_rules:
       - check-success = format-check
       - check-success = lint-tidy
       - check-success = build-and-test
-      - check-success = build-sanitizers
+      - check-success = build-sanitized
       - "#approved-reviews-by-requested-changes = 0"
       - "#approved-reviews-by >= 0"
     merge_conditions:
       - check-success = "Build and Test Release"
-      - check-success = "Build Sanitizers (sanitized)"
-      - check-success = "Build Sanitizers (tsan)"
+      - check-success = "Build Sanitized (sanitized)"
+      - check-success = "Build Sanitized (tsan)"
 
 pull_request_rules:
   - name: Automatically queue PRs when reviews and check workflow pass
@@ -25,7 +25,7 @@ pull_request_rules:
       - check-success = format-check
       - check-success = lint-tidy
       - check-success = build-and-test
-      - check-success = build-sanitizers
+      - check-success = build-sanitized
       - "#approved-reviews-by-requested-changes = 0"
       - "#approved-reviews-by >= 0"
     actions:

@@ -35,8 +35,8 @@ jobs:
       - name: Build and Run Tests (${{ matrix.config }})
         run: bazel test --config=release //...
 
-  build-gate-sanitizers:
-    name: Build Sanitizers (${{ matrix.config }})
+  build-gate-sanitized:
+    name: Build Sanitized (${{ matrix.config }})
     runs-on: ubuntu-latest
 
     strategy:

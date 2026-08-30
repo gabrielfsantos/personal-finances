@@ -129,7 +129,7 @@ jobs:
       - name: Test
         run: bazel test --config=${{ matrix.config }} //...
 
-  build-sanitizers:
+  build-sanitized:
     runs-on: ubuntu-latest
     needs: prepare-workspace
 
@@ -148,9 +148,9 @@ jobs:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
-          key: bazel-check-sanitizers-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
+          key: bazel-check-sanitized-${{ runner.os }}-${{ hashFiles('**/*.bzl', '**/BUILD.bazel', '**/MODULE.bazel', '.bazelversion', '.bazelrc') }}
           restore-keys: |
-            bazel-release-sanitizers-${{ runner.os }}-
+            bazel-release-sanitized-${{ runner.os }}-
 
       - name: Sanitize
-        run: bazel build --config=sanitizers //...
+        run: bazel build --config=sanitized //...
