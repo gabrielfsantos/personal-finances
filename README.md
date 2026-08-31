@@ -3,3 +3,22 @@
 
 # personal-finances
 Program to control personal finances with a integration with desktop and mobile app
+
+# Commands
+
+- Build commands:
+```python
+bazel build //... --config=debug
+bazel build //... --config=tidy
+bazel build //... --config=release
+bazel build //... --config=sanitized
+bazel build //... --config=asan
+bazel build //... --config=ubsan
+bazel build //... --config=tsan
+bazel build //core/src:money --config=debug
+```
+
+- Format all files:
+```python
+bazel run //:format
+```

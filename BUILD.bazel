@@ -1,14 +1,17 @@
 package(default_visibility = ["//:__subpackages__"])
 
 exports_files(
-    [
-        ".clang-format",
-        ".clang-tidy",
-    ],
+    [".clang-format"],
     visibility = ["//:__subpackages__"],
 )
 
 alias(
     name = "format",
     actual = "//tools/format",
+)
+
+filegroup(
+    name = "clang_tidy_config",
+    srcs = [".clang-tidy"],
+    visibility = ["//visibility:public"],
 )
