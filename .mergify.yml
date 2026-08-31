@@ -1,13 +1,17 @@
 queue_rules:
   - name: default
     merge_method: squash
+    batch_size: 5
+    batch_max_wait_time: 5 minutes
     queue_conditions:
       - base = master
       - check-success = check-dependencies
       - check-success = prepare-workspace
       - check-success = format-check
       - check-success = lint-tidy
-      - check-success = build-and-test
+      - check-success = Build and Test (debug)
+      - check-success = Build and Test (fastbuild)
+      - check-success = Build and Test (asan)
       - check-success = build-sanitized
     merge_conditions:
       - check-success = "Build and Test Release"
@@ -22,7 +26,9 @@ pull_request_rules:
       - check-success = prepare-workspace
       - check-success = format-check
       - check-success = lint-tidy
-      - check-success = build-and-test
+      - check-success = Build and Test (debug)
+      - check-success = Build and Test (fastbuild)
+      - check-success = Build and Test (asan)
       - check-success = build-sanitized
     actions:
       queue:
