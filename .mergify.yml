@@ -5,6 +5,9 @@ queue_rules:
     batch_max_wait_time: 5 minutes
     queue_conditions:
       - base = master
+      - -draft
+      - label != do-not-merge
+      - label != wip
       - check-success = check-dependencies
       - check-success = prepare-workspace
       - check-success = format-check
@@ -22,6 +25,9 @@ pull_request_rules:
   - name: Automatically queue PRs when reviews and check workflow pass
     conditions:
       - base = master
+      - -draft
+      - label != do-not-merge
+      - label != wip
       - check-success = check-dependencies
       - check-success = prepare-workspace
       - check-success = format-check
